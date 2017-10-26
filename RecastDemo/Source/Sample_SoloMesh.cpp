@@ -37,6 +37,7 @@
 #include "OffMeshConnectionTool.h"
 #include "ConvexVolumeTool.h"
 #include "CrowdTool.h"
+#include <fstream>
 
 #ifdef WIN32
 #	define snprintf _snprintf
@@ -52,7 +53,8 @@ Sample_SoloMesh::Sample_SoloMesh() :
 	m_cset(0),
 	m_pmesh(0),
 	m_dmesh(0),
-	m_drawMode(DRAWMODE_NAVMESH)
+	m_drawMode(DRAWMODE_NAVMESH),
+	m_navDataSavePath(0)
 {
 	setTool(new NavMeshTesterTool);
 }
@@ -711,6 +713,23 @@ bool Sample_SoloMesh::handleBuild()
 			dtFree(navData);
 			m_ctx->log(RC_LOG_ERROR, "Could not init Detour navmesh");
 			return false;
+		}
+
+		if(m_navDataSavePath)
+		{
+			FILE * f = fopen(m_navDataSavePath, "wb");
+			if(f)
+			{
+				if(navDataSize != (int)fwrite(navData,1,navDataSize,f))
+				{
+					printf("Failed to write %d bytes to file ",navDataSize);
+				}
+				fclose(f);
+			}
+			else
+			{
+				printf("Failed to open file for write [%s]",m_navDataSavePath);
+			}
 		}
 		
 		status = m_navQuery->init(m_navMesh, 2048);

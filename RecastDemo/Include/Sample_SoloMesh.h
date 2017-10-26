@@ -61,6 +61,7 @@ protected:
 	
 	DrawMode m_drawMode;
 	
+	
 	void cleanup();
 		
 public:
@@ -76,6 +77,7 @@ public:
 	virtual void handleMeshChanged(class InputGeom* geom);
 	virtual bool handleBuild();
 
+	const char * m_navDataSavePath;
 private:
 	// Explicitly disabled copy constructor and copy assignment operator.
 	Sample_SoloMesh(const Sample_SoloMesh&);
