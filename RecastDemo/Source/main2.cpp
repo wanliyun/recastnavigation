@@ -30,6 +30,8 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 #include "imgui.h"
 #include "imguiRenderGL.h"
@@ -48,32 +50,82 @@
 using std::string;
 using std::vector;
 
+
 int main_ori(int argc, char** argv);
+
+class MyMesh : public Sample_SoloMesh
+{
+public:
+	bool LoadSettings(const char * filePath)
+	{
+		using namespace std;
+		ifstream  is(filePath);
+		string line;
+		char buf[256];
+		while(getline(is, line))
+		{
+			if(line[0] == '#')
+				continue;
+			if(line[0] == 's')
+			{
+				sscanf(line.c_str(), "%s %f %f %f %f %f %f %f %f %f %f %f %f %f %d",buf,
+					&m_cellSize,
+					&m_cellHeight,
+					&m_agentHeight,
+					&m_agentRadius,
+					&m_agentMaxClimb,
+					&m_agentMaxSlope,
+					&m_regionMinSize,
+					&m_regionMergeSize,
+					&m_edgeMaxLen,
+					&m_edgeMaxError,
+					&m_vertsPerPoly,
+					&m_detailSampleDist,
+					&m_detailSampleMaxError,
+					&m_partitionType);
+					break;
+			}
+		}
+		return true;
+	}
+};
+
 int main(int argc, char** argv)
 {
 	if(argc<3)
 	{
-		printf("USAGE: %s inputObjFilePath  outputNavFilePath",argv[0]);
-		return -1;
+		printf("USAGE: %s inputObjFilePath  outputNavFilePath [settingFile]",argv[0]);
+		return main_ori(argc,argv);
 	}
 
 	BuildContext ctx;
 	InputGeom* geom = new InputGeom();
-	
+
 	if(!geom->load(&ctx, argv[1]))
 	{
-		printf("USAGE:Failed to load objFile [%s]",argv[1]);
+		printf("Failed to load objFile [%s]",argv[1]);
 		return -1;
 	}
-	Sample_SoloMesh * sample = new Sample_SoloMesh();
+
+	MyMesh * sample = new MyMesh();
+
 	sample->setContext(&ctx);
 	sample->handleMeshChanged(geom);
 	sample->m_navDataSavePath = argv[2];
+
+	if(argc > 3)
+	{
+		if(!sample->LoadSettings(argv[3]))
+		{
+			printf("Failed to load setting [%s]",argv[1]);
+			return -1;
+		}
+	}
+
 	sample->handleBuild();
-	
+
 	delete sample;
 	delete geom;
-	
-	main_ori(argc,argv);
+
 	return 0;
 }
