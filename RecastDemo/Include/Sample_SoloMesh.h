@@ -63,7 +63,7 @@ protected:
 	
 	
 	void cleanup();
-		
+
 public:
 	Sample_SoloMesh();
 	virtual ~Sample_SoloMesh();
