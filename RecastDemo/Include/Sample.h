@@ -131,7 +131,8 @@ protected:
 	BuildContext* m_ctx;
 
 	SampleDebugDraw m_dd;
-	
+
+public:
 	dtNavMesh* loadAll(const char* path);
 	void saveAll(const char* path, const dtNavMesh* mesh);
 
