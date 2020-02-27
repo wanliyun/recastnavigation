@@ -72,6 +72,8 @@ struct MyParams
 	float m_detailSampleDist;
 	float m_detailSampleMaxError;
 	int m_partitionType;
+	int m_logLevel;
+	float m_titleSize;
 
 	std::map<string, string> mKVs;
 
@@ -86,7 +88,7 @@ struct MyParams
 		return s;
 	}
 
-	bool read(const std::string & name, int & val)
+	bool read(const std::string & name, int & val, int dft = 0)
 	{
 		if (mKVs.find(name) != mKVs.end())
 		{
@@ -94,10 +96,11 @@ struct MyParams
 			printf("read %s=%d\n", name.c_str(), val);
 			return true;
 		}
+		val = dft;
 		return false;
 	}
 
-	bool read(const std::string & name, float & val)
+	bool read(const std::string & name, float & val, float dft = 0.f)
 	{
 		if (mKVs.find(name) != mKVs.end())
 		{
@@ -105,6 +108,7 @@ struct MyParams
 			printf("read %s=%f\n", name.c_str(), val);
 			return true;
 		}
+		val = dft;
 		return false;
 	}
 
@@ -146,6 +150,8 @@ struct MyParams
 		read("detailSampleDist", m_detailSampleDist);
 		read("detailSampleMaxError", m_detailSampleMaxError);
 		read("partitionType", m_partitionType);
+		read("logLevel", m_logLevel, 100);
+		read("titleSize", m_titleSize);
 		return true;
 	}
 };
@@ -216,6 +222,7 @@ public:
 		m_detailSampleDist = param.m_detailSampleDist;
 		m_detailSampleMaxError = param.m_detailSampleMaxError;
 		m_partitionType = param.m_partitionType;
+		m_tileSize = param.m_titleSize;
 
 		m_buildAll = true;
 		int gw = 0, gh = 0;
@@ -226,7 +233,7 @@ public:
 		const int tw = (gw + ts - 1) / ts;
 		const int th = (gh + ts - 1) / ts;
 		
-
+#ifndef DT_POLYREF64
 		// Max tiles and max polys affect how the tile IDs are caculated.
 		// There are 22 bits available for identifying a tile and a polygon.
 		int tileBits = rcMin((int)ilog2(nextPow2(tw*th)), 14);
@@ -234,10 +241,42 @@ public:
 		int polyBits = 22 - tileBits;
 		m_maxTiles = 1 << tileBits;
 		m_maxPolysPerTile = 1 << polyBits;
+#else
+		m_maxTiles = tw * th;
+		m_maxPolysPerTile = 1 << DT_POLY_BITS;
+#endif
 	}
 
 };
+class MyBuildContext : public BuildContext
+{
+	std::ofstream m_out;
+	int m_logLevel;
+public:
+	
+	void Init(int logLevel)
+	{
+		m_logLevel = logLevel;
+		if (m_logLevel <= 10)
+		{
+			m_out = std::ofstream("generate_log.txt", std::ios::out);
+		}
+	}
 
+	~MyBuildContext()
+	{
+		m_out.close();
+	}
+	virtual void doLog(const rcLogCategory category, const char* msg, const int len)
+	{
+		if (category >= m_logLevel)
+		{
+			m_out << category << " ";
+			m_out.write(msg, len);
+			m_out << std::endl;
+		}
+	}
+};
 
 int main(int argc, char** argv)
 {
@@ -247,7 +286,8 @@ int main(int argc, char** argv)
 		return main_ori(argc,argv);
 	}
 
-	BuildContext ctx;
+	MyBuildContext ctx;
+
 	InputGeom* geom = new InputGeom();
 
 	if(!geom->load(&ctx, argv[1]))
@@ -265,6 +305,8 @@ int main(int argc, char** argv)
 			printf("Failed to load setting [%s]", argv[1]);
 			return -1;
 		}
+		ctx.Init(parms.m_logLevel);
+
 		if (parms.m_isTitleMesh)
 		{
 			MyTitleMesh * p = new MyTitleMesh();

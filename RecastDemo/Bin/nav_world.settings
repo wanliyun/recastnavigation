@@ -1,0 +1,19 @@
+# geometry set for navmesh gen
+
+isTitleMesh=1
+cellSize=0.5
+cellHeight=0.5
+agentHeight=2.0
+agentRadius=0.2
+agentMaxClimb=0.8
+agentMaxSlope=60.0
+regionMinSize=8.0
+regionMergeSize=20.0
+edgeMaxLen=12.0
+edgeMaxError=1.3
+vertsPerPoly=6.0
+detailSampleDist=6.0
+detailSampleMaxError=1.0
+partitionType=0
+logLevel=1
+titleSize=128

@@ -250,6 +250,7 @@ void Sample_TileMesh::handleSettings()
 		snprintf(text, 64, "Tiles  %d x %d", tw, th);
 		imguiValue(text);
 
+#ifndef DT_POLYREF64
 		// Max tiles and max polys affect how the tile IDs are caculated.
 		// There are 22 bits available for identifying a tile and a polygon.
 		int tileBits = rcMin((int)ilog2(nextPow2(tw*th)), 14);
@@ -257,6 +258,10 @@ void Sample_TileMesh::handleSettings()
 		int polyBits = 22 - tileBits;
 		m_maxTiles = 1 << tileBits;
 		m_maxPolysPerTile = 1 << polyBits;
+#else
+		m_maxPolysPerTile = 1 << DT_POLY_BITS;
+		m_maxTiles = tw * th;
+#endif
 		snprintf(text, 64, "Max Tiles  %d", m_maxTiles);
 		imguiValue(text);
 		snprintf(text, 64, "Max Polys  %d", m_maxPolysPerTile);
@@ -620,7 +625,7 @@ bool Sample_TileMesh::handleBuild()
 		return false;
 	}
 	
-	status = m_navQuery->init(m_navMesh, 2048);
+	status = m_navQuery->init(m_navMesh, 4096);
 	if (dtStatusFailed(status))
 	{
 		m_ctx->log(RC_LOG_ERROR, "buildTiledNavigation: Could not init Detour navmesh query");
