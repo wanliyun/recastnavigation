@@ -334,8 +334,8 @@ int main(int argc, char** argv)
 	sample->handleBuild();
 	sample->saveAll(argv[2], sample->getNavMesh());
 
-	delete sample;
-	delete geom;
+	//delete sample;
+	//delete geom;
 
 	return 0;
 }
